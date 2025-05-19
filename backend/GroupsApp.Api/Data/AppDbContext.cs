@@ -1,4 +1,3 @@
-// backend/GroupsApp.Api/Data/AppDbContext.cs
 using Microsoft.EntityFrameworkCore;
 using GroupsApp.Api.Models;
 
@@ -45,6 +44,10 @@ namespace GroupsApp.Api.Data
                 .HasOne(t => t.Payer)
                 .WithMany(u => u.PayerTransactions)
                 .HasForeignKey(t => t.PayerUserId);
+
+            // Ignore SplitDetails from EF mapping
+            modelBuilder.Entity<Transaction>()
+                .Ignore(t => t.SplitDetails);
         }
     }
 }

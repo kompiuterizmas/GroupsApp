@@ -1,26 +1,30 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import ConnectionChecker from './components/ConnectionChecker';
+import NavBar from './components/NavBar';
+import GroupsListPage from './pages/GroupsListPage';
+import GroupDetailPage from './pages/GroupDetailPage';
+import NewTransactionPage from './pages/NewTransactionPage';
+import MembersPage from './pages/MembersPage';
+import { Box, Toolbar } from '@mui/material';
 
-function App() {
+export default function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ConnectionChecker>
+      <BrowserRouter>
+        <NavBar />
+        {/* Spacer to offset fixed NavBar height */}
+        <Toolbar />
+        <Box component="main" sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/groups" replace />} />
+            <Route path="/groups" element={<GroupsListPage />} />
+            <Route path="/groups/:groupId" element={<GroupDetailPage />} />
+            <Route path="/groups/:groupId/new-transaction" element={<NewTransactionPage />} />
+            <Route path="/users" element={<MembersPage />} />
+          </Routes>
+        </Box>
+      </BrowserRouter>
+    </ConnectionChecker>
   );
 }
-
-export default App;

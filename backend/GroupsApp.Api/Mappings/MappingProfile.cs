@@ -1,6 +1,7 @@
 using AutoMapper;
 using GroupsApp.Api.DTOs;
 using GroupsApp.Api.Models;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace GroupsApp.Api.Mappings
@@ -9,39 +10,47 @@ namespace GroupsApp.Api.Mappings
     {
         public MappingProfile()
         {
-            // Group → GroupDto
+            // Map Group to GroupDto and compute overall balance
             CreateMap<Group, GroupDto>()
                 .ForMember(dest => dest.Balance, opt => opt.MapFrom(src =>
-                    // suma balansų per visus narius grupėje
-                    src.GroupMembers.Sum(gm =>
-                        CalculateBalanceForMember(gm.UserId, src.Id, gm.Group, gm.User)))
-                );
+                    CalculateGroupBalance(src)));
 
-            // Group → GroupDetailDto (Title + Id, navigacijos mapinamos žemiau)
-            CreateMap<Group, GroupDetailDto>()
-                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
-                .ForMember(dest => dest.Id,    opt => opt.MapFrom(src => src.Id));
+            // Map Group to GroupDetailDto (members & transactions are set in service)
+            CreateMap<Group, GroupDetailDto>();
 
-            // Transaction → TransactionDto
+            // Map GroupMember to MemberDto
+            CreateMap<GroupMember, MemberDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name))
+                .ForMember(dest => dest.Balance, opt => opt.Ignore());  // balance calculated in service
+
+            // Map Transaction to TransactionDto
             CreateMap<Transaction, TransactionDto>();
 
-            // User → MemberDto (naudojamas atskiroje map’inimo logikoje)
-            CreateMap<User, MemberDto>()
-                .ForMember(dest => dest.Id,      opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.Name,    opt => opt.MapFrom(src => src.Name))
-                // Balance bus apskaičiuotas per service, tad čia nebereikalingas
-                .ForMember(dest => dest.Balance, opt => opt.Ignore());
+            // Map User to UserDto
+            CreateMap<User, UserDto>();
         }
 
-        // Helper within profile – you can move this to service if norite
-        private decimal CalculateBalanceForMember(int userId, int groupId, Group group, User user)
+        private decimal CalculateGroupBalance(Group group)
         {
-            // Čia tik pavyzdys – tikras skaičiavimas vyksta service sluoksnyje
-            return group.Transactions.Sum(tx =>
-                tx.SplitDetails != null && tx.SplitDetails.TryGetValue(userId, out var share)
-                    ? (tx.PayerUserId == userId ? tx.Amount - share : -share)
-                    : 0m
-            );
+            var balances = new Dictionary<int, decimal>();
+            foreach (var gm in group.GroupMembers)
+            {
+                balances[gm.UserId] = 0m;
+            }
+            foreach (var tx in group.Transactions)
+            {
+                if (tx.SplitDetails is null) continue;
+                foreach (var kvp in tx.SplitDetails)
+                {
+                    var userId = kvp.Key;
+                    var share = kvp.Value;
+                    if (!balances.ContainsKey(userId)) continue;
+                    balances[userId] += tx.PayerUserId == userId ? tx.Amount - share : -share;
+                }
+            }
+            // sum of balances (example: total collective balance)
+            return balances.Values.Sum();
         }
     }
 }

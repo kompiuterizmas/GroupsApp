@@ -1,4 +1,3 @@
-// backend/GroupsApp.Api/Models/Group.cs
 using System.Collections.Generic;
 
 namespace GroupsApp.Api.Models

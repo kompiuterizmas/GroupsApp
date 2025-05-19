@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace GroupsApp.Api.DTOs
 {
     public enum SplitType

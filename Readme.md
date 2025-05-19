@@ -100,7 +100,7 @@
 Swagger UI is available at:
 
 ```
-http://localhost:5000/swagger
+http://localhost:5257/swagger
 ```
 
 ### Main Endpoints

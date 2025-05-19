@@ -1,27 +1,24 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GroupsApp.Api.Models
 {
     public class Transaction
     {
         public int Id { get; set; }
+        public int GroupId { get; set; }
 
-        // Which group this transaction belongs to
-        public required int GroupId { get; set; }
-        public required Group Group { get; set; }
+        // <-- padarome nullable, kad nebūtų privaloma inicializuoti
+        public Group? Group { get; set; }
 
-        // Who paid (must be a member of the group)
-        public required int PayerUserId { get; set; }
-        public required User Payer { get; set; }
+        public int PayerUserId { get; set; }
+        public User? Payer { get; set; }
 
-        // Total amount paid
-        public required decimal Amount { get; set; }
-
-        // When the payment occurred
+        public decimal Amount { get; set; }
         public DateTime Date { get; set; }
 
-        // Details of how the amount is split: UserId -> share (amount or percentage)
+        [NotMapped]
         public Dictionary<int, decimal>? SplitDetails { get; set; }
     }
 }

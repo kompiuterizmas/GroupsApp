@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{460F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroupsApp.Api", "backend\GroupsApp.Api\GroupsApp.Api.csproj", "{7CF67712-7C0D-4B8F-AC11-E45C61ABAC5B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroupsApp.Tests", "backend\GroupsApp.Tests\GroupsApp.Tests.csproj", "{9CD554BB-8B69-453D-98FC-1D80206940ED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,8 +22,13 @@ Global
 		{7CF67712-7C0D-4B8F-AC11-E45C61ABAC5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7CF67712-7C0D-4B8F-AC11-E45C61ABAC5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7CF67712-7C0D-4B8F-AC11-E45C61ABAC5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9CD554BB-8B69-453D-98FC-1D80206940ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9CD554BB-8B69-453D-98FC-1D80206940ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9CD554BB-8B69-453D-98FC-1D80206940ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9CD554BB-8B69-453D-98FC-1D80206940ED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{7CF67712-7C0D-4B8F-AC11-E45C61ABAC5B} = {460F5FCE-F051-47C2-8E38-F5E850A9FB1F}
+		{9CD554BB-8B69-453D-98FC-1D80206940ED} = {460F5FCE-F051-47C2-8E38-F5E850A9FB1F}
 	EndGlobalSection
 EndGlobal
