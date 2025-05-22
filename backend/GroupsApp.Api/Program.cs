@@ -24,6 +24,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseInMemoryDatabase("GroupsDb"));
 
+// Register the SeedService for seeding demo data
+builder.Services.AddScoped<ISeedService, SeedService>();
+
 // Register AutoMapper with your MappingProfile
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 

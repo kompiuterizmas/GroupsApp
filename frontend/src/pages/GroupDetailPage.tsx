@@ -1,131 +1,87 @@
-// frontend/src/pages/GroupDetailPage.tsx
-
-import React, { useEffect, useState, KeyboardEvent } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   getGroupDetail,
-  addMember,
   GroupDetailDto,
-  MemberDto,
-  TransactionDto
+  MemberDto
 } from '../services/api';
 import {
+  Box,
   Typography,
-  TextField,
-  Button,
   Card,
   CardContent,
-  Box
+  Grid,
+  CircularProgress
 } from '@mui/material';
 import NetworkErrorPage from '../components/NetworkErrorPage';
+import TransactionCard from '../components/TransactionCard';
 
 export default function GroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>();
   const [group, setGroup] = useState<GroupDetailDto | null>(null);
-  const [memberName, setMemberName] = useState('');
-  const [hasError, setHasError] = useState(false);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (groupId) load();
+    if (!groupId) return;
+    (async () => {
+      try {
+        const data = await getGroupDetail(+groupId);
+        setGroup(data);
+      } catch {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [groupId]);
 
-  const load = async () => {
-    setHasError(false);
-    try {
-      const data = await getGroupDetail(+groupId!);
-      setGroup(data);
-    } catch {
-      setHasError(true);
-    }
-  };
-
-  const handleAdd = async () => {
-    if (!memberName.trim()) return;
-    try {
-      await addMember(+groupId!, memberName.trim());
-      setMemberName('');
-      load();
-    } catch {
-      setHasError(true);
-    }
-  };
-
-  // New: handle Enter key in the input field
-  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAdd();
-    }
-  };
-
-  if (hasError) {
-    return <NetworkErrorPage onRetry={load} />;
+  if (loading) {
+    return (
+      <Box p={4} textAlign="center">
+        <CircularProgress />
+      </Box>
+    );
   }
-
-  if (!group) {
-    return <Typography>Loading...</Typography>;
+  if (error || !group) {
+    return <NetworkErrorPage onRetry={() => window.location.reload()} />;
   }
 
   return (
-    <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <Box p={4} sx={{ maxWidth: 800, mx: 'auto' }}>
       <Typography variant="h4" gutterBottom>
         {group.title}
       </Typography>
 
-      <Box component="form" sx={{ mb: 3, width: '100%', maxWidth: 400 }}>
-        <TextField
-          fullWidth
-          label="New Member Name"
-          value={memberName}
-          onChange={e => setMemberName(e.target.value)}
-          onKeyDown={handleKeyDown}           // ← added
-          margin="normal"
-        />
-        <Button
-          variant="contained"
-          onClick={handleAdd}
-          disabled={!memberName.trim()}
-          fullWidth
-        >
-          Add Member
-        </Button>
-      </Box>
+      <Typography variant="h6" gutterBottom>
+        Members
+      </Typography>
+      <ul>
+        {group.members.map((m: MemberDto) => (
+          <li key={m.id}>
+            {m.name} (Balance: {m.balance.toFixed(2)})
+          </li>
+        ))}
+      </ul>
 
-      <Typography variant="h6">Members</Typography>
-      {group.members.map(m => (
-        <Card key={m.id} sx={{ width: '100%', maxWidth: 400, mb: 1 }}>
-          <CardContent>
-            <Typography>{m.name}</Typography>
-            <Typography>
-              Balance: {m.balance >= 0 ? '+' : '-'}
-              {Math.abs(m.balance).toFixed(2)}
-            </Typography>
-          </CardContent>
-        </Card>
-      ))}
-
-      <Typography variant="h6" sx={{ mt: 4 }}>
+      <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
         Transactions
       </Typography>
-      {group.transactions.map(tx => (
-        <Card key={tx.id} sx={{ width: '100%', maxWidth: 400, mb: 1 }}>
-          <CardContent>
-            <Typography>
-              Paid by: {tx.payerId}, Amount: {tx.amount}, Date:{' '}
-              {new Date(tx.date).toLocaleString()}
-            </Typography>
-          </CardContent>
-        </Card>
-      ))}
-
-      <Button
-        component={Link}
-        to={`/groups/${groupId}/new-transaction`}
-        variant="contained"
-        sx={{ mt: 4 }}
-      >
-        New Transaction
-      </Button>
+      <Grid container spacing={2}>
+         {group.transactions.map(tx => {
+         const payer = group.members.find(m => m.id === tx.payerId);
+         const payerName = payer?.name ?? `#${tx.payerId}`;
+         return (
+           <Grid size={{ xs: 12, sm: 6, md: 4 }} key={tx.id}>
+             <TransactionCard
+               transaction={tx}
+               groupName={group.title}
+               payerName={payerName}
+             />
+           </Grid>
+         );
+       })}
+      </Grid>
     </Box>
   );
 }

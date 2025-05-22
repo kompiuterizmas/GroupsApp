@@ -4,15 +4,12 @@ namespace GroupsApp.Api.Models
 {
     public class User
     {
+        // PK – EF will generate this on add
         public int Id { get; set; }
-
-        // User's display name or username
-        public required string Name { get; set; }
-
-        // All group memberships for this user
+        public string Name { get; set; } = null!;
+        // Navigation to memberships
         public ICollection<GroupMember> GroupMembers { get; set; } = new List<GroupMember>();
-
-        // All transactions where this user was the payer
+        // Navigation to transactions paid by this user
         public ICollection<Transaction> PayerTransactions { get; set; } = new List<Transaction>();
     }
 }

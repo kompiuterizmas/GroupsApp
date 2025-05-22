@@ -10,46 +10,55 @@ namespace GroupsApp.Api.Mappings
     {
         public MappingProfile()
         {
-            // Map Group to GroupDto and compute overall balance
+            // Group → GroupDto (include members)
             CreateMap<Group, GroupDto>()
-                .ForMember(dest => dest.Balance, opt => opt.MapFrom(src =>
-                    CalculateGroupBalance(src)));
+                .ForMember(d => d.Balance,
+                           opt => opt.MapFrom(src => CalculateGroupBalance(src)))
+                .ForMember(d => d.Members,
+                           opt => opt.MapFrom(src => src.GroupMembers));
 
-            // Map Group to GroupDetailDto (members & transactions are set in service)
+            // Group → GroupDetailDto (service fills members & transactions)
             CreateMap<Group, GroupDetailDto>();
 
-            // Map GroupMember to MemberDto
+            // GroupMember → MemberDto
             CreateMap<GroupMember, MemberDto>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.UserId))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name))
-                .ForMember(dest => dest.Balance, opt => opt.Ignore());  // balance calculated in service
+                .ForMember(d => d.Id,
+                           opt => opt.MapFrom(src => src.UserId))
+                .ForMember(d => d.Name,
+                           opt => opt.MapFrom(src => src.User!.Name))
+                .ForMember(d => d.Balance,
+                           opt => opt.Ignore());
 
-            // Map Transaction to TransactionDto
-            CreateMap<Transaction, TransactionDto>();
+            // Transaction → TransactionDto
+            CreateMap<Transaction, TransactionDto>()
+                .ForMember(d => d.PayerId,
+                           opt => opt.MapFrom(src => src.PayerUserId))
+                .ForMember(d => d.SplitType,
+                           opt => opt.MapFrom(src => src.SplitType.ToString()))
+                .ForMember(d => d.GroupId,
+                           opt => opt.MapFrom(src => src.GroupId))
+                .ForMember(d => d.Description,
+                           opt => opt.MapFrom(src => src.Description));
 
-            // Map User to UserDto
+            // User → UserDto
             CreateMap<User, UserDto>();
         }
 
         private decimal CalculateGroupBalance(Group group)
         {
-            var balances = new Dictionary<int, decimal>();
-            foreach (var gm in group.GroupMembers)
-            {
-                balances[gm.UserId] = 0m;
-            }
+            var balances = group.GroupMembers.ToDictionary(gm => gm.UserId, _ => 0m);
             foreach (var tx in group.Transactions)
             {
-                if (tx.SplitDetails is null) continue;
+                if (tx.SplitDetails == null) continue;
                 foreach (var kvp in tx.SplitDetails)
                 {
-                    var userId = kvp.Key;
-                    var share = kvp.Value;
-                    if (!balances.ContainsKey(userId)) continue;
-                    balances[userId] += tx.PayerUserId == userId ? tx.Amount - share : -share;
+                    if (!balances.ContainsKey(kvp.Key)) continue;
+                    balances[kvp.Key] +=
+                        tx.PayerUserId == kvp.Key
+                        ? tx.Amount - kvp.Value
+                        : -kvp.Value;
                 }
             }
-            // sum of balances (example: total collective balance)
             return balances.Values.Sum();
         }
     }
